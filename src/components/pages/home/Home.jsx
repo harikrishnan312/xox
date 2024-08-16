@@ -5,7 +5,8 @@ import axios from 'axios';
 import useAuth from '../../../hooks/useAuth';
 
 export default function Home() {
-    const baseURL = "http://localhost:3001"
+    // const baseURL = "http://localhost:3001"
+    // const baseURL = "https://xox-backend.onrender.com"
 
     const [join, setJoin] = useState(false);
     const [boardId, setBoardId] = useState('')
