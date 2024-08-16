@@ -1,0 +1,38 @@
+.game {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 50px;
+    color: rgb(255, 255, 255);
+}
+
+.status {
+    margin-bottom: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    color: grey;
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(3, 100px);
+    grid-template-rows: repeat(3, 100px);
+    gap: 5px;
+    background-color: rgb(131, 240, 131);
+}
+
+.cell {
+    width: 100px;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 36px;
+    font-weight: bold;
+    border: 2px solid #000;
+    cursor: pointer;
+}
+
+.cell:hover {
+    background-color: #00ff80;
+}
