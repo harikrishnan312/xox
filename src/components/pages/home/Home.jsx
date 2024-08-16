@@ -24,6 +24,7 @@ export default function Home() {
             setUser(result)
         }
         generateId()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const buttonStyle = {

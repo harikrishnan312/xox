@@ -30,6 +30,7 @@ function GameBoard() {
                 setBoard(Array(9).fill(null))
             }
         })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const buttonStyle = {
