@@ -13,6 +13,9 @@ function GameBoard() {
     const [board, setBoard] = useState(Array(9).fill(null));
     const [isXNext, setIsXNext] = useState(true);
     const [turn, setTurn] = useState(true);
+    const [yourMessage, setYourMessage] = useState("");
+    const [oppMessage, setOppMessage] = useState("");
+    const [message, setMessage] = useState("");
 
     useEffect(() => {
         socket = io(EndPoint);
@@ -28,6 +31,13 @@ function GameBoard() {
         socket.on('reset', (userid) => {
             if (user !== userid) {
                 setBoard(Array(9).fill(null))
+            }
+        })
+        socket.on("recieve_message", (message, userid) => {
+            if (user !== userid) {
+                setTimeout(() => { setOppMessage(".") }, 1000)
+                setTimeout(() => { setOppMessage("..") }, 2000)
+                setTimeout(() => { setOppMessage(message) }, 3000)
             }
         })
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -57,6 +67,15 @@ function GameBoard() {
         setTurn(false)
         socket.emit('new_board', newBoard, id, user, isXNext);
     };
+
+    const sendMessage = () => {
+        if (message.length === 0) {
+            return
+        }
+        setYourMessage(message);
+        socket.emit('send_message', id, message, user);
+        setMessage('')
+    }
 
     const calculateWinner = (board) => {
         const lines = [
@@ -101,6 +120,47 @@ function GameBoard() {
             </div>
             <br />
             <button style={buttonStyle} onClick={() => reset()}>Reset</button>
+            {(yourMessage.length > 0 || oppMessage.length > 0) && <div style={{
+                width: "18em", backgroundColor: '#f0f0f0', borderRadius: '.5em', paddingLeft: '1em', paddingRight: '1em', marginTop: '.5em'
+            }}>
+                <div style={{ textAlign: 'left' }}><p style={{ color: "blue", fontSize: '1.2em' }}>Opponent : {oppMessage}</p></div>
+                <div style={{ textAlign: 'right', marginBottom: '10px' }}><p style={{ color: "orange", fontSize: '1.2em' }}>You : {yourMessage}</p></div>
+            </div>}
+            <div style={{ display: 'flex', alignItems: 'center', paddingTop: ".5em", paddingBottom: "3em" }}>
+                <input
+                    type="text"
+                    placeholder="Type your message here..."
+                    style={{
+                        padding: '10px',
+                        fontSize: '16px',
+                        border: '1px solid #ccc',
+                        borderRadius: '4px 0 0 4px',
+                        flex: 1
+                    }}
+                    onChange={(e) => {
+                        setMessage(e.target.value);
+                    }}
+                    value={message}
+                />
+                <button
+                    type="submit"
+                    style={{
+                        padding: '10px 20px',
+                        fontSize: '16px',
+                        border: '1px solid #ccc',
+                        borderLeft: 'none',
+                        backgroundColor: '#28a745',
+                        color: 'white',
+                        borderRadius: '0 4px 4px 0',
+                        cursor: 'pointer'
+                    }}
+                    onClick={() => {
+                        sendMessage()
+                    }}
+                >
+                    Send
+                </button>
+            </div>
         </div>
     );
 }
