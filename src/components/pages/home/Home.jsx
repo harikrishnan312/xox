@@ -31,14 +31,14 @@ export default function Home() {
         backgroundColor: '#4CAF50',
         border: 'none',
         color: 'white',
-        padding: '15px 32px',
+        padding: '.5em 1em',
         textAlign: 'center',
         textDecoration: 'none',
         display: 'inline-block',
-        margin: '4px 2px',
+        margin: '.1em .3em',
         cursor: 'pointer',
-        borderRadius: '8px',
-        width: "15em",
+        borderRadius: '.2em',
+        width: "12em",
         fontSize: '1.5em'
     };
     const inputStyle = {
@@ -48,7 +48,7 @@ export default function Home() {
         borderRadius: '4px',
         border: '2px solid green',
         fontSize: '16px',
-        width: '22.5em',
+        width: '17.5em',
     };
     const createBroad = () => {
         axios.post(`${baseURL}/create_game`).then((res) => {
@@ -67,7 +67,7 @@ export default function Home() {
 
     return (
         <div className='home'>
-            <h1 style={{ color: 'grey', fontSize: '4em' }}>Tic Tac Toe</h1>
+            <h1 style={{ color: 'grey', fontSize: '2em'}}>Tic Tac Toe</h1>
             <button style={buttonStyle} onClick={() => {
                 createBroad()
             }}>Create Game</button>
