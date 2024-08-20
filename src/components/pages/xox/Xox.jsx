@@ -4,8 +4,8 @@ import useAuth from '../../../hooks/useAuth';
 import io from "socket.io-client";
 
 let socket;
-const EndPoint = "http://localhost:3001"
-// const EndPoint = "https://xox-backend.onrender.com"
+// const EndPoint = "http://localhost:3001"
+const EndPoint = "https://xox-backend.onrender.com"
 
 function GameBoard() {
 
