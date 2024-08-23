@@ -52,7 +52,7 @@ export default function Home() {
     };
     const createBroad = () => {
         axios.post(`${baseURL}/create_game`).then((res) => {
-            console.log(res)
+            // console.log(res)
             setId(res.data.board_id);
             navigate('/board');
         })

@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import './Xox.css';
 import useAuth from '../../../hooks/useAuth';
 import io from "socket.io-client";
+import Peer from "simple-peer"
 
 let socket;
 // const EndPoint = "http://localhost:3001"
@@ -16,11 +17,28 @@ function GameBoard() {
     const [yourMessage, setYourMessage] = useState("");
     const [oppMessage, setOppMessage] = useState("");
     const [message, setMessage] = useState("");
+    const [opponent, setOpponent] = useState('');
+    const [stream, setStream] = useState()
+    const [receivingCall, setReceivingCall] = useState(false)
+    const [caller, setCaller] = useState("")
+    const [callerSignal, setCallerSignal] = useState()
+    const [callAccepted, setCallAccepted] = useState(false)
+    const [callEnded, setCallEnded] = useState(false);
+    const [isVideo, setIsVideo] = useState(false)
+    const myVideo = useRef()
+    const userVideo = useRef()
+    const connectionRef = useRef()
 
     useEffect(() => {
+
         socket = io(EndPoint);
 
-        id.length > 0 && socket.emit("set up", id);
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
+            setStream(stream)
+
+        })
+        id.length > 0 && socket.emit("set up", id, user);
+
         socket.on('new_board', (newBoard, userid, isXNext) => {
             if (newBoard && userid !== user) {
                 setBoard(newBoard);
@@ -40,8 +58,107 @@ function GameBoard() {
                 setTimeout(() => { setOppMessage(message) }, 3000)
             }
         })
+        socket.on("connect_chat", (userid) => {
+            if (user !== userid) {
+                setOpponent(userid);
+                console.log(userid, user)
+            }
+        })
+
+        socket.on("callUser", (data) => {
+            setReceivingCall(true)
+            setCaller(data.from)
+            setCallerSignal(data.signal)
+        })
+        socket.on("callEnd", () => {
+            if (userVideo.current?.srcObject) {
+                userVideo.current.srcObject = null
+                connectionRef.current = null
+            }
+            setCallEnded(true);
+            setReceivingCall(false);
+            setCallAccepted(false);
+        })
+        return (() => {
+            socket.emit("leave", id)
+        })
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
+
+    const callUser = (id) => {
+        try {
+            const peer = new Peer({
+                initiator: true,
+                trickle: false,
+                stream: stream
+            })
+            peer.on("signal", (data) => {
+                socket.emit("callUser", {
+                    userToCall: opponent,
+                    signalData: data,
+                    from: user,
+                })
+            })
+            peer.on("stream", (stream) => {
+
+                if (userVideo.current) {
+                    userVideo.current.srcObject = stream
+                }
+
+            })
+            socket.on("callAccepted", (signal) => {
+                setCallAccepted(true)
+                peer.signal(signal)
+            })
+
+            connectionRef.current = peer
+        } catch (error) {
+            console.log(error)
+        }
+
+    }
+    const answerCall = () => {
+        try {
+            setCallAccepted(true)
+            const peer = new Peer({
+                initiator: false,
+                trickle: false,
+                stream: stream
+            })
+            peer.on("signal", (data) => {
+                socket.emit("answerCall", { signal: data, to: caller })
+            })
+            peer.on("stream", (stream) => {
+                if (userVideo.current) {
+                    userVideo.current.srcObject = stream
+                }
+            })
+            peer.signal(callerSignal)
+            connectionRef.current = peer
+        } catch (error) {
+            console.log(error)
+        }
+
+    }
+
+    const leaveCall = () => {
+        try {
+            setCallEnded(true)
+            socket.emit("callEnd", id)
+            setReceivingCall(false)
+        } catch (error) {
+            console.log(error)
+        }
+
+    }
+
+    const openVideoChat = () => {
+        socket.emit('video_chat', user, id);
+        setIsVideo(true);
+        if (myVideo.current) {
+            myVideo.current.srcObject = stream
+        }
+    }
 
     const buttonStyle = {
         backgroundColor: 'red',
@@ -120,6 +237,88 @@ function GameBoard() {
             </div>
             <br />
             <button style={buttonStyle} onClick={() => reset()}>Reset</button>
+            {!isVideo && <button style={buttonStyle} onClick={() => openVideoChat()}>Video Chat</button>}
+            <div className="container">
+                <div className="video-call-container" style={{ position: "relative", height: "50vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#f0f2f5" }}>
+                    <div className="video-container" style={{ position: "relative", borderRadius: "10px", overflow: "hidden", boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.2)", backgroundColor: "#000" }}>
+                        <div className="my-video-container" style={{ position: "absolute", bottom: "10px", right: "10px", width: "150px", height: "100px", borderRadius: "10px", overflow: "hidden", border: "2px solid #fff" }}>
+                            {stream && <video playsInline muted ref={myVideo} autoPlay style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                        </div>
+                        <div className="user-video" style={{ width: "400px", height: "300px" }}>
+                            {callAccepted && !callEnded ? (
+                                <video playsInline ref={userVideo} autoPlay style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            ) : (
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%", color: "#fff" }}>
+                                    Waiting for user to join...
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="call-button">
+                    {callAccepted && !callEnded ? (
+                        <button style={{
+                            backgroundColor: 'red',
+                            border: 'none',
+                            color: 'white',
+                            padding: '8px 12px',
+                            textAlign: 'center',
+                            textDecoration: 'none',
+                            display: 'inline-block',
+                            margin: '4px 2px',
+                            cursor: 'pointer',
+                            borderRadius: '8px',
+                            width: "6em",
+                            fontSize: '1.5em'
+                        }} variant="contained" color="secondary" onClick={leaveCall}>
+                            Close Video Chat
+                        </button>
+                    ) : (
+                        !receivingCall && <button style={{
+                            backgroundColor: 'green',
+                            border: 'none',
+                            color: 'white',
+                            padding: '8px 12px',
+                            textAlign: 'center',
+                            textDecoration: 'none',
+                            display: 'inline-block',
+                            margin: '4px 2px',
+                            cursor: 'pointer',
+                            borderRadius: '8px',
+                            width: "6em",
+                            fontSize: '1.5em'
+                        }} onClick={() => callUser(opponent)}>
+                            Connect
+                        </button>
+                    )}
+                </div>
+                <div>
+                    {receivingCall && !callAccepted ? (
+                        <div className="caller">
+                            <p >Requesting video chat...</p>
+                            <button style={{
+                                backgroundColor: 'green',
+                                border: 'none',
+                                color: 'white',
+                                padding: '8px 15px',
+                                textAlign: 'center',
+                                textDecoration: 'none',
+                                display: 'inline-block',
+                                margin: '4px 2px',
+                                cursor: 'pointer',
+                                borderRadius: '8px',
+                                width: "8em",
+                                fontSize: '1.2em'
+                            }}
+                                onClick={answerCall}>
+                                Join
+                            </button>
+                        </div>
+                    ) : null}
+                </div>
+            </div>
+
             {(yourMessage.length > 0 || oppMessage.length > 0) && <div style={{
                 width: "18em", backgroundColor: '#f0f0f0', borderRadius: '.5em', paddingLeft: '1em', paddingRight: '1em', marginTop: '.5em'
             }}>
