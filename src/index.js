@@ -1,3 +1,4 @@
+import * as process from 'process';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
@@ -5,12 +6,16 @@ import App from './App';
 import Context from './context/AuthContext';
 import Footer from './components/footer/Footer';
 
+(window).global = window;
+(window).process = process;
+(window).Buffer = [];
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <Context>
     <React.StrictMode>
       <App />
-      <Footer/>
+      <Footer />
     </React.StrictMode>
   </Context>
 );
