@@ -64,10 +64,22 @@ export default function Home() {
             navigate('/board')
         }
     }
+    const joinLastGame = () => {
+        try {
+            axios.get(`${baseURL}/last_game`).then((res) => {
+                if (res.data.length > 0) {
+                    setId(res.data);
+                    navigate('/board')
+                }
+            })
+        } catch (error) {
+            console.log(error)
+        }
+    }
 
     return (
         <div className='home'>
-            <h1 style={{ color: 'grey', fontSize: '2em'}}>Tic Tac Toe</h1>
+            <h1 style={{ color: 'grey', fontSize: '2em' }}>Tic Tac Toe</h1>
             <button style={buttonStyle} onClick={() => {
                 createBroad()
             }}>Create Game</button>
@@ -92,6 +104,9 @@ export default function Home() {
                     }} onClick={() => joinGame()}>Submit</button>
                 </>
             }
+            <button style={buttonStyle} onClick={() => {
+                joinLastGame()
+            }}>Join last Game</button>
         </div>
     )
 }
