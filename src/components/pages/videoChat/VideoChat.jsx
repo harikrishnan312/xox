@@ -38,7 +38,7 @@ export default function VideoChat({ socket, opponent, user, id, setIsVideo }) {
             // setCallAccepted(false);
         })
         return (() => {
-            setStream(null)
+            // setStream(null)
             if (connectionRef.current) {
                 connectionRef.current.destroy();
                 connectionRef.current = null
