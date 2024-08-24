@@ -16,9 +16,12 @@ export default function VideoChat({ socket, opponent, user, id, setIsVideo }) {
 
         navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
             setStream(stream)
-            if (myVideo.current) {
-                myVideo.current.srcObject = stream
-            }
+            setTimeout(() => {
+                if (myVideo.current) {
+                    myVideo.current.srcObject = stream
+                }
+            },1000)
+
         })
 
         socket.on("callUser", (data) => {
@@ -125,7 +128,7 @@ export default function VideoChat({ socket, opponent, user, id, setIsVideo }) {
     }
     return (
         <div className="container">
-            <div className="video-call-container" style={{ position: "relative", height: "50vh", alignItems: "center", justifyContent: "center", backgroundColor: "#f0f2f5", padding: '1em', display: 'flex', margin:'1em' }}>
+            <div className="video-call-container" style={{ position: "relative", height: "50vh", alignItems: "center", justifyContent: "center", backgroundColor: "#f0f2f5", padding: '1em', display: 'flex', margin: '1em' }}>
                 <div className="video-container" style={{ position: "relative", borderRadius: "10px", overflow: "hidden", boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.2)", backgroundColor: "#000" }}>
                     <div className="my-video-container" style={{ position: "absolute", bottom: "10px", right: "10px", width: "150px", height: "100px", borderRadius: "10px", overflow: "hidden", border: "2px solid #fff" }}>
                         {stream && <video playsInline muted ref={myVideo} autoPlay style={{ width: "100%", height: "100%", objectFit: "cover", transform: "scaleX(-1)" }} />}
